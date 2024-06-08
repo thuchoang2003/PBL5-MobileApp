@@ -125,7 +125,7 @@ export default function LoginComponents({navigation}) {
           </View>
         </KeyboardAwareScrollView>
 
-        <TouchableOpacity
+        {/* <TouchableOpacity
           onPress={() => {
             // handle link
           }}
@@ -141,7 +141,7 @@ export default function LoginComponents({navigation}) {
               Sign up
             </Text>
           </Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
     </SafeAreaView>
   );
