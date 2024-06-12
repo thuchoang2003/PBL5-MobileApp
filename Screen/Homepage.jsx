@@ -27,7 +27,7 @@ export default function Homepage({navigation}) {
   const uid = userData.uid;
 
   //image to render
-  const [listImage, setListImage] = useState();
+  const [listImage, setListImage] = useState([]);
   const storage = getStorage(firebaseApp);
 
   //image all
@@ -68,24 +68,24 @@ export default function Homepage({navigation}) {
     {label: 'Tất cả', value: 'all'},
   ];
   const [value, setValue] = useState(null);
-  const handleChangeOption =  async (item) => {
+  const handleChangeOption = async item => {
     setValue(item.value); // Cập nhật giá trị đã chọn
     // Nếu người dùng chọn 'Tất cả', hiển thị tất cả các ảnh
 
-   const imagesRef = ref(storage, `${uid}`);
-   const imageList = await listAll(imagesRef);
+    const imagesRef = ref(storage, `${uid}`);
+    const imageList = await listAll(imagesRef);
 
-   const imageUrls = await Promise.all(
-     imageList.items.map(async imageRef => {
-       const url = await getDownloadURL(imageRef);
-       const metadata = await getMetadata(imageRef);
-       return {
-         url: url,
-         name: metadata.name,
-         createdDate: metadata.timeCreated,
-       };
-     }),
-   );
+    const imageUrls = await Promise.all(
+      imageList.items.map(async imageRef => {
+        const url = await getDownloadURL(imageRef);
+        const metadata = await getMetadata(imageRef);
+        return {
+          url: url,
+          name: metadata.name,
+          createdDate: metadata.timeCreated,
+        };
+      }),
+    );
 
     if (item.value === 'all') {
       setListImage(imageUrls);

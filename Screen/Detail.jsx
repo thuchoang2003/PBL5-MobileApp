@@ -19,14 +19,12 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import {firebaseApp} from '../firebaseConfig';
 import {getFirestore, collection, doc, getDoc} from 'firebase/firestore';
 import {useSelector} from 'react-redux';
-
 export default function Detail({route, navigation}) {
-  const {dataImage, listFullImage} = route.params;
+  const {dataImage} = route.params;
   const firestore = getFirestore(firebaseApp);
   const userData = useSelector(state => state.account.user);
   const [content, setContent] = useState('');
   const [listText, setListText] = useState('');
-
   const [modalVisible, setModalVisible] = useState(false);
   const [ipAddress, setIpAddress] = useState('');
   const handleConfirm = () => {
@@ -92,7 +90,6 @@ export default function Detail({route, navigation}) {
                       navigation.navigate('audio', {
                         content: content,
                         dataImage: dataImage,
-                        listFullImage: listFullImage,
                         listText: listText,
                       })
                     }>

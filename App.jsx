@@ -52,6 +52,7 @@ function App() {
 
         isInitialized = true;
       } catch (e) {
+        console.log(e);
         // Handle errors if needed
       }
 

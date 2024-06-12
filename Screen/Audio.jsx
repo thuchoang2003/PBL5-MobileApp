@@ -32,17 +32,39 @@ import {useSelector} from 'react-redux';
 import {getStorage, ref, listAll, getDownloadURL} from 'firebase/storage';
 import {firebaseApp} from '../firebaseConfig';
 import {getMetadata} from 'firebase/storage';
-import {Dropdown, SelectCountry} from 'react-native-element-dropdown';
 export default function Audio({route, navigation}) {
   const [listAudio, setAudioFile] = useState([]);
   const playBackState = usePlaybackState();
   const [indexCurrent, setIndexCurrent] = useState(0);
   const [isMute, setIsMute] = useState(false);
-  const {content, dataImage, listFullImage, listText} = route.params;
+  const {content, dataImage, listText} = route.params;
   const userData = useSelector(state => state.account.user);
+  const uid = userData.uid;
   const storage = getStorage(firebaseApp);
 
   const progress = useProgress();
+  const getImagesByUid = async uid => {
+    try {
+      const imagesRef = ref(storage, `${uid}`);
+      const imageList = await listAll(imagesRef);
+
+      const imageUrls = await Promise.all(
+        imageList.items.map(async imageRef => {
+          const url = await getDownloadURL(imageRef);
+          const metadata = await getMetadata(imageRef);
+          return {
+            url: url,
+            name: metadata.name,
+            createdDate: metadata.timeCreated,
+          };
+        }),
+      );
+      return imageUrls;
+    } catch (error) {
+      console.error('Error getting images from Firebase Storage:', error);
+      return [];
+    }
+  };
   const getAudioByUid = async uid => {
     try {
       const audiosRef = ref(storage, `${uid}_Audio`);
@@ -59,8 +81,9 @@ export default function Audio({route, navigation}) {
           };
         }),
       );
+      const listFullImages = await getImagesByUid(uid);
       const dataTmp = audioUrls.map((item, index) => {
-        const element = listFullImage.find(
+        const element = listFullImages.find(
           child => child.name.split('.')[0] === item.name.split('.')[0],
         );
         return {
@@ -104,17 +127,29 @@ export default function Audio({route, navigation}) {
     let position = progress.position;
     let duration = progress.duration;
     // Kiểm tra xem trạng thái phát nhạc đã kết thúc chưa
-    if (position >= duration - 1 && position != 0 && duration != 0) {
-      console.log('check event');
+    if (
+      position >= duration - 1 &&
+      position != 0 &&
+      duration != 0 &&
+      playBackState.state == 'playing'
+    ) {
+      console.log('check event', playBackState);
       console.log('check position', progress.position);
       console.log('check duration', progress.duration);
+
       if (indexCurrent + 1 <= listAudio.length - 1) {
         setIndexCurrent(indexCurrent + 1);
       }
     }
   });
+  useTrackPlayerEvents([Event.PlaybackQueueEnded], async event => {
+    console.log('call function');
+  });
   useEffect(() => {
-    getAudioByUid(userData.uid);
+    const fetchData = async () => {
+      await getAudioByUid(userData.uid);
+    };
+    fetchData();
   }, []);
 
   useEffect(() => {
@@ -193,9 +228,7 @@ export default function Audio({route, navigation}) {
               <KeyboardAwareScrollView>
                 <View style={styles.viewImg}>
                   <Image
-                    // source={SigninImage}
                     src={listAudio[indexCurrent]?.image}
-                    // src={dataImage.url}
                     style={styles.img}></Image>
                 </View>
                 <View style={styles.viewProgressBar}>
@@ -229,7 +262,8 @@ export default function Audio({route, navigation}) {
                         color="black"
                         onPress={() => {
                           TrackPlayer.setVolume(0);
-                          setIsMute(true)}}
+                          setIsMute(true);
+                        }}
                       />
                     )}
                     {isMute && (
@@ -239,7 +273,8 @@ export default function Audio({route, navigation}) {
                         color="black"
                         onPress={() => {
                           TrackPlayer.setVolume(1);
-                          setIsMute(false)}}
+                          setIsMute(false);
+                        }}
                       />
                     )}
                   </TouchableOpacity>
